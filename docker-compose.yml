@@ -1,0 +1,83 @@
+version: '3'
+
+services:
+    postgres:
+        image: postgres:16-alpine
+        container_name: postgres_project
+        ports:
+            - ${POSTGRES_HOST_PORT:-16584}:5432
+        volumes:
+            - ./Database/Data/Postgres:/var/lib/postgresql/data
+            - ./Database:/code
+            - ./Database/Data/Backup:/backup
+            - ./Database/Data/Archive:/archive
+        environment:
+            - POSTGRES_USER=${POSTGRES_USER:-arman}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-arman}
+            - POSTGRES_DB=${POSTGRES_DB:-postgres}
+            - POSTGRES_SCHEMA=${POSTGRES_SCHEMA:-arman}
+        profiles:
+            - db
+            - project
+
+    zookeeper:
+        image: wurstmeister/zookeeper
+        container_name: zookeeper_project
+        ports:
+            - ${ZOOKEEPER_HOST_PORT:-2181}:2181
+        restart: unless-stopped
+        profiles:
+            - project
+
+    kafka:
+        image: wurstmeister/kafka
+        container_name: kafka_project
+        ports:
+            - ${KAFKA_HOST_PORT:-9092}:9092
+        environment:
+            KAFKA_ADVERTISED_HOST_NAME: localhost
+            KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+            KAFKA_CREATE_TOPICS: '${KAFKA_TOPICS}:-Add_Timestamp:1:1,Add_Label:1:1,Add_Database:1:1'
+        restart: unless-stopped
+        depends_on:
+            - zookeeper
+        profiles:
+            - project
+    nocodb:
+        depends_on:
+            root_db:
+                condition: service_healthy
+        environment:
+            NC_DB: 'pg://root_db:5432?u=postgres&p=password&d=root_db'
+            NC_JWT_EXPIRES_IN: ${NC_JWT_EXPIRES_IN:-48h}
+            NC_ADMIN_EMAIL: ${NC_ADMIN_EMAIL:-arman@gmail.com}
+            NC_ADMIN_PASSWORD: ${NC_ADMIN_PASSWORD:-12345678}
+        image: 'nocodb/nocodb:0.204.4'
+        ports:
+            - '${NOCODB_HOST_PORT:-8080}:8080'
+        restart: always
+        volumes:
+            - './Database/Data/Nocodb:/usr/app/data'
+        profiles:
+            - project
+            - nocodb
+
+    root_db:
+        environment:
+            POSTGRES_DB: root_db
+            POSTGRES_PASSWORD: password
+            POSTGRES_USER: postgres
+        healthcheck:
+            interval: 10s
+            retries: 10
+            test: 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"'
+            timeout: 2s
+        image: postgres
+        ports:
+            - '16585:5432'
+        restart: always
+        volumes:
+            - './Database/Data/Postgres:/var/lib/postgresql/data'
+        profiles:
+            - default
+            - nocodb
