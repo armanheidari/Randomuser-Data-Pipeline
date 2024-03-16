@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "Randomuser-Data-Pipeline"
+version = "1.1.0"
+description = ""
+authors = ["Arman Heidari"]
+license = "BSD 3-Clause "New" or "Revised" License"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+kafka-python = "2.0.2"
+psycopg2 = "2.9.9"
+python-dotenv = "1.0.1"
+requests = "2.31.0"
+Faker = "24.2.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

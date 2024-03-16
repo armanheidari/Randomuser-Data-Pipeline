@@ -20,11 +20,14 @@ dir_path=$(_parent_dir $(readlink -f $0) 1)
 
 bash $dir_path/Administrator_Scripts/Log.sh "Application is running"
 
-set -o allexport && source $dir_path/.env && set +o allexport
-
-if ! grep -q "^\w\+:[[:digit:]]\+:[[:digit:]]\+\(,\w\+:[[:digit:]]\+:[[:digit:]]\+\)*$" <<< "${KAFKA_TOPICS:-Add_Timestamp:1:1,Add_Label:1:1,Add_Database:1:1}"; then
-    bash $dir_path/Administrator_Scripts/Log.sh "The pattern of [KAFKA_TOPICS] environment variable is not correct"
-    exit 1
+if [ -f "$dir_path/.env" ]; then
+	set -o allexport && source "$dir_path/.env" && set +o allexport
+    if [ -n "$KAFKA_TOPICS" ]; then
+        if ! grep -q "^\w\+:[[:digit:]]\+:[[:digit:]]\+\(,\w\+:[[:digit:]]\+:[[:digit:]]\+\)*$" <<< "$KAFKA_TOPICS"; then
+            bash $dir_path/Administrator_Scripts/Log.sh "The pattern of [KAFKA_TOPICS] environment variable is not correct"
+            exit 1
+        fi
+    fi
 fi
 
 bash $dir_path/Project_Stop.sh

@@ -18,6 +18,8 @@ bash $dir_path/Administrator_Scripts/Log.sh "Adding [0-Get_Data.py] To Crontab..
 
 (
 	crontab -l
-	echo "* * * * *  $dir_path/.venv/bin/python3  $dir_path/Python_Files/0-Get_Data.py 1>>/dev/null 2>>/dev/null"
-    echo "5 * * * *  $dir_path/bin/bash  $dir_path/Database/Backup.sh 1>>/dev/null 2>>/dev/null"
+	# echo "* * * * * python3 $dir_path/Python_Files/0-Get_Data.py"
+	# echo "* * * * * bash -c 'source $dir_path/.venv/bin/activate && python3 $dir_path/Python_Files/0-Get_Data.py' > /dev/null 2>>/home/mate/log.log"
+	echo "* * * * *  $dir_path/.venv/bin/python3 $dir_path/Python_Files/0-Get_Data.py 1>>/dev/null 2>>/home/mate/log.log"
+    echo "5 * * * *  $dir_path/bin/bash $dir_path/Database/Backup.sh 1>>/dev/null 2>>/dev/null"
 ) | crontab -

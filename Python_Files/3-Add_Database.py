@@ -8,9 +8,9 @@ import os
 import sys
 
 dir_path = Path(__file__).parent.parent
-sys.path.append(str(dir_path / 'logger'))
+sys.path.append(str(dir_path / 'Python_Files'))
 from Noco import Nocodb
-from log import Log
+from Logger import Log
 
 
 load_dotenv(dotenv_path=str(dir_path / '.env'))
@@ -147,7 +147,7 @@ def add_to_database(data):
     for _ in range(5):
         try:
             cursor.execute(f'''
-                INSERT INTO users  AS u (username, email, id, first_name, last_name, gender, address, post_code, dob, registered_date, phone, picture)
+                INSERT INTO users  AS u (username, email, id, first_name, last_name, gender, address, post_code, dob, registered_date, phone, picture, company)
                 VALUES ('{data['username']}', '{data['email']}', '{data['id']}', '{data['first_name']}', '{data['last_name']}', '{data['gender']}', '{data['address']}', '{data['post_code']}', '{data['dob']}', '{data['registered_date']}', '{data['phone']}', '{data['picture']}', '{data['company']}');
             ''')
             connection.commit()

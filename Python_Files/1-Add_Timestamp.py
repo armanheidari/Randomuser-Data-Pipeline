@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 import json
 from kafka import KafkaConsumer
 from kafka import KafkaProducer
@@ -9,8 +8,8 @@ import os
 import sys
 
 dir_path = Path(__file__).parent.parent
-sys.path.append(str(dir_path / 'logger'))
-from log import Log
+sys.path.append(str(dir_path / 'Python_Files'))
+from Logger import Log
 
 
 load_dotenv(dotenv_path=str(dir_path / '.env'))
@@ -38,7 +37,6 @@ producer = KafkaProducer(
 )
 
 for message in consumer:
-    print('HERE')
     logger.info(
         f"Key:{message.key}\tValue:{message.value}")
 

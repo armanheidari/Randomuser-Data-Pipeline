@@ -13,6 +13,8 @@ _parent_dir () {
 
 dir_path=$(_parent_dir $(readlink -f $0) 2)
 
-set -o allexport && source $dir_path/.env && set +o allexport
+if [ -f "$dir_path/.env" ]; then
+	set -o allexport && source "$dir_path/.env" && set +o allexport
+fi
 
 docker exec postgres_project bash -c "pg_basebackup -U ${POSTGRES_USER:-arman} -w -D /backup/standalone-"$(date +%Y-%m-%d_%T%H-%M)" -c fast -P -R"

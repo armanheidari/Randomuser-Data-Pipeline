@@ -13,19 +13,21 @@ _parent_dir () {
 
 dir_path=$(_parent_dir $(readlink -f $0) 1)
 
-bash $dir_path/Administrator_Scripts/Log.sh "Project Initializer Started"
-
 # Access .env variables in shell script
-set -o allexport && source $dir_path/.env && set +o allexport
+if [ -f "$dir_path/.env" ]; then
+	set -o allexport && source "$dir_path/.env" && set +o allexport
+fi
 
 sudo mkdir -p $dir_path/Database/Data/Postgres
 sudo mkdir -p $dir_path/Database/Data/Nocodb
-sudo mkdir -p $dir_path/Administrator_Scripts/Nocodb
-sudo mkdir -p $dir_path/log
+mkdir -p $dir_path/Administrator_Scripts/Nocodb
+mkdir -p $dir_path/log
 
 # Create Log files
 touch $dir_path/log/error.log
 touch $dir_path/log/info.log
+
+bash $dir_path/Administrator_Scripts/Log.sh "Project Initializer Started"
 
 # ---------------------------------------------------------------------
 
@@ -43,6 +45,7 @@ _permiter () {
 		else
 			find "$dir_path/$f_name" -type f -iname "*.$extension" | xargs chmod a+x
 		fi
+	fi
 }
 
 bash $dir_path/Administrator_Scripts/Log.sh "Adding Execution Permission..."
@@ -116,34 +119,129 @@ fi
 
 bash $dir_path/Administrator_Scripts/Log.sh "Creating Python Virtual Environment..."
 
-if ! [ -d "$dir_path/.venv" ]; then
-	python3 -m venv $dir_path/.venv
-	if [ $? -ne 0 ]; then
-		echo "There was a problem while creating virtual environment. Please wait..."
-		sudo rm -rf $dir_path/.venv
-		sudo apt-get install -y python3-venv
 
-		if [ $? -ne 0 ]; then
-			echo "There was a problem while installing python3-venv"
-			exit 1
-		fi
-	fi
-
+if [ -d "$dir_path/.venv" ]; then
 	source $dir_path/.venv/bin/activate
 	if [ $? -ne 0 ]; then
 		sudo chmod a+x $dir_path/.venv/bin/activate
 		if [ $? -ne 0 ]; then
-			echo "There was a problem while adding execute permission."
+			bash $dir_path/Administrator_Scripts/Log.sh "There was a problem while adding execute permission."
 			exit 1
 		fi
 		
 		source $dir_path/.venv/bin/activate
 		if [ $? -ne 0 ]; then
-			echo "There was a problem while activating virtual environment"
+			bash $dir_path/Administrator_Scripts/Log.sh "There was a problem while activating virtual environment"
+			exit 1
+		fi
+
+		pip install poetry==1.8.2
+		if [ $? -eq 0 ]; then
+			poetry shell
+			if [ $? -ne 0 ]; then
+				echo "There was a problem while activating poetry shell"
+				exit 1
+			fi
+			
+			poetry install --no-root
+			if [ $? -ne 0 ]; then
+				bash $dir_path/Administrator_Scripts/Log.sh "There was a problem while installing packages"
+				exit 1
+			fi
+		else
+			bash $dir_path/Administrator_Scripts/Log.sh "There was a problem while installing poetry using pip"
+			exit 1
+		fi
+
+	else
+		pip install poetry==1.8.2
+		if [ $? -eq 0 ]; then
+			poetry shell
+			if [ $? -ne 0 ]; then
+				bash $dir_path/Administrator_Scripts/Log.sh "There was a problem while activating poetry shell"
+				exit 1
+			fi
+			
+			poetry install --no-root
+			if [ $? -ne 0 ]; then
+				bash $dir_path/Administrator_Scripts/Log.sh "There was a problem while installing packages"
+				exit 1
+			fi
+		else
+			bash $dir_path/Administrator_Scripts/Log.sh "There was a problem while installing poetry using pip"
+			exit 1
+		fi
+	fi
+else
+	python3 -m venv $dir_path/.venv
+	if [ $? -eq 0 ]; then
+		sudo chmod a+x $dir_path/.venv/bin/activate
+		if [ $? -ne 0 ]; then
+			exit 1
+		fi
+		
+		source $dir_path/.venv/bin/activate
+		if [ $? -ne 0 ]; then
+			exit 1
+		fi
+
+		pip install poetry==1.8.2
+		if [ $? -eq 0 ]; then
+			poetry shell
+			if [ $? -ne 0 ]; then
+				bash $dir_path/Administrator_Scripts/Log.sh "There was a problem while activating poetry shell"
+				exit 1
+			fi
+			
+			poetry install --no-root
+			if [ $? -ne 0 ]; then
+				echo "There was a problem while installing packages"
+				exit 1
+			fi
+		else
+			echo "There was a problem while installing poetry using pip"
+			exit 1
+		fi
+	else
+		echo "Creating python virtual environment"
+		sudo rm -rf $dir_path/.venv
+		sudo apt-get install -y python3-venv
+		
+		if [ $? -eq 0 ]; then
+			sudo chmod a+x $dir_path/.venv/bin/activate
+			if [ $? -ne 0 ]; then
+				exit 1
+			fi
+			
+			source $dir_path/.venv/bin/activate
+			if [ $? -ne 0 ]; then
+				exit 1
+			fi
+
+			pip install poetry==1.8.2
+			if [ $? -eq 0 ]; then
+				poetry shell
+				if [ $? -ne 0 ]; then
+					echo "There was a problem while activating poetry shell"
+					exit 1
+				fi
+				
+				poetry install --no-root
+				if [ $? -ne 0 ]; then
+					echo "There was a problem while installing packages"
+					exit 1
+				fi
+			else
+				echo "There was a problem while installing poetry using pip"
+				exit 1
+			fi
+		else
+			echo "There was a problem while creating pyton virtual environment"
 			exit 1
 		fi
 	fi
 fi
+
 
 docker compose -f $dir_path/docker-compose.yml --profile=nocodb down
 docker compose -f $dir_path/docker-compose.yml --profile=nocodb up -d
@@ -214,6 +312,7 @@ done
 
 if [ $flag -eq 0 ]; then
 	bash $dir_path/Administrator_Scripts/Log.sh "There was a problem while connecting to the database"
+	sudo rm -rf $dir_path/Data/Postgres
 	exit 1
 fi
 
@@ -224,14 +323,14 @@ bash $dir_path/Administrator_Scripts/Log.sh "Checking Schema..."
 
 counter=0
 flag=0
-while [ $counter -lt 30 -a $flag -ne 1 ]; do	
-	if [ $(docker exec postgres_project bash -c "psql -U arman -d postgres -h localhost -c \"
+while [ $counter -lt 30 -a $flag -ne 1 ]; do
+	if [ $(docker exec postgres_project bash -c "psql -U ${POSTGRES_USER:-arman} -d ${POSTGRES_DB:-postgres} -h ${POSTGRES_HOST:-localhost} -c \"
 		SELECT 1
 		FROM information_schema.TABLES AS t
 		WHERE t.table_name = 'users' AND
 		t.table_schema = 'arman';\" | grep -c '(1 row)'") -lt 1 ]; then
 		counter=$(($counter + 1))
-		docker exec postgres_project bash -c "psql -U ${POSTGRES_USER:-arman} -d ${POSTGRES_DB:-postgres} -h ${POSTGRES_HOST:-localhost} < /code/init.sql 1>/dev/null 2>/dev/null"
+		docker exec postgres_project bash -c "psql -U ${POSTGRES_USER:-arman} -d ${POSTGRES_DB:-postgres} -h ${POSTGRES_HOST:-localhost} < /code/Database.sql 1>/dev/null 2>/dev/null"
 		sleep 1
 		continue
 	fi
@@ -240,6 +339,7 @@ done
 
 if [ $flag -eq 0 ]; then
 	bash $dir_path/Administrator_Scripts/Log.sh "There was a problem while creating [${POSTGRES_SCHEMA:-arman}] schema and/or [users] table"
+	sudo rm -rf $dir_path/Data/Postgres
 	exit 1
 fi
 
@@ -253,6 +353,7 @@ bash $dir_path/Database/Backup.sh
 
 if [ $? -ne 0 ]; then
 	bash $dir_path/Administrator_Scripts/Log.sh "There was a problem while creating initaial backup"
+	sudo rm -rf $dir_path/Data/Postgres
 	exit 1
 fi
 

@@ -1,8 +1,6 @@
 #!/usr/bin/python3
-from log import Log
 import uuid
 import json
-import requests
 from kafka import KafkaProducer
 from dotenv import load_dotenv
 from pathlib import Path
@@ -10,8 +8,10 @@ import os
 import sys
 
 dir_path = Path(__file__).parent.parent
-sys.path.append(str(dir_path / 'logger'))
+sys.path.append(str(dir_path / 'Python_Files'))
 
+import requests
+from Logger import Log
 
 load_dotenv(dotenv_path=str(dir_path / '.env'))
 

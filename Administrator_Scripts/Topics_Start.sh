@@ -15,10 +15,10 @@ dir_path=$(_parent_dir $(readlink -f $0) 2)
 
 source "$dir_path/.venv/bin/activate"
 
-nohup python3 "$dir_path/Python_Files/Add_Timestamp.py" 1>/dev/null 2>/dev/null &
+nohup python3 "$dir_path/Python_Files/1-Add_Timestamp.py" 1>/dev/null 2>/dev/null &
 
-nohup python3 "$dir_path/Python_Files/Add_Label.py" 1>/dev/null 2>/dev/null &
+nohup python3 "$dir_path/Python_Files/2-Add_Label.py" 1>/dev/null 2>/dev/null &
 
-nohup python3 "$dir_path/Python_Files/Add_Database.py" 1>/dev/null 2>/dev/null &
+nohup python3 "$dir_path/Python_Files/3-Add_Database.py" 1>/dev/null 2>/dev/null &
 
 bash $dir_path/Administrator_Scripts/Log.sh "Topic Start Finished Successfully"

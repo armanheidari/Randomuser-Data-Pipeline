@@ -7,9 +7,10 @@ import sys
 from typing import Optional
 
 root_path = Path(__file__).parent.parent
-sys.path.append(str(root_path / 'logger'))
+sys.path.append(str(root_path / 'Python_Files'))
 
-from log import Log
+
+from Logger import Log
 
 
 load_dotenv(dotenv_path=str(root_path / '.env'))
@@ -55,7 +56,7 @@ class Nocodb:
             token = self.load_token_from_file()
             if token is None:
                 logger.critical('there was a error in app ! please see logs')
-                raise ValueError(f'error in validate user - email: {email}, password: {password} - msg: {response.text}')
+                raise ValueError(f'error in validate user - email: {email}, password: {password}')
         
         if save_token:
             self.save_token(token)
@@ -98,7 +99,7 @@ class Nocodb:
 
     def load_token_from_file(self) -> str:
         try:
-            with open(root_path / 'setting/nocodb/token.txt', 'r', encoding='utf-8') as f:
+            with open(root_path / 'Administrator_Scripts/Nocodb/token.txt', 'r', encoding='utf-8') as f:
                 token = f.read().strip()
             
             if self.validate_token(token):
@@ -144,23 +145,23 @@ class Nocodb:
                         exit(1)
 
     def save_token(self, token: str):
-        with open(root_path / 'setting/nocodb/token.txt', 'w', encoding='utf-8') as f:
+        with open(root_path / 'Administrator_Scripts/Nocodb/token.txt', 'w', encoding='utf-8') as f:
             f.write(token)
 
     def save_info(self, email: str, password: str):
-        with open(root_path / 'setting/nocodb/email.txt', 'w', encoding='utf-8') as f:
+        with open(root_path / 'Administrator_Scripts/Nocodb/email.txt', 'w', encoding='utf-8') as f:
             f.write(email)
 
-        with open(root_path / 'setting/nocodb/password.txt', 'w', encoding='utf-8') as f:
+        with open(root_path / 'Administrator_Scripts/Nocodb/password.txt', 'w', encoding='utf-8') as f:
             f.write(password)
     
     def load_info(self) -> dict:
         info = {}
         try:
-            with open(root_path / 'setting/nocodb/email.txt', 'r', encoding='utf-8') as f:
+            with open(root_path / 'Administrator_Scripts/Nocodb/email.txt', 'r', encoding='utf-8') as f:
                 info['email'] = f.read().strip()
 
-            with open(root_path / 'setting/nocodb/password.txt', 'r', encoding='utf-8') as f:
+            with open(root_path / 'Administrator_Scripts/Nocodb/password.txt', 'r', encoding='utf-8') as f:
                 info['password'] = f.read().strip()
         except Exception as e:
             logger.error(f'{str(e)}')
@@ -169,7 +170,7 @@ class Nocodb:
     
     def load_base_id(self):
         try:
-            with open(root_path / 'setting/nocodb/base_id.txt', 'r', encoding='utf-8') as f:
+            with open(root_path / 'Administrator_Scripts/Nocodb/base_id.txt', 'r', encoding='utf-8') as f:
                 base_id = f.read().strip()
             
             self.validate_base_id(base_id)
@@ -195,7 +196,7 @@ class Nocodb:
             raise ValueError(f'base id not found: {base_id}')
 
     def save_base_id(self, base_id: str):
-        with open(root_path / 'setting/nocodb/base_id.txt', 'w', encoding='utf-8') as f:
+        with open(root_path / 'Administrator_Scripts/Nocodb/base_id.txt', 'w', encoding='utf-8') as f:
             f.write(base_id)
     
     def get_base_id(self):
@@ -372,7 +373,7 @@ class Nocodb:
             raise ValueError(f'{response.json()["msg"]}')
     
     def save_table_id(self, table_id: str):
-        with open(root_path / 'setting/nocodb/table_id.txt', 'w', encoding='utf-8') as f:
+        with open(root_path / 'Administrator_Scripts/Nocodb/table_id.txt', 'w', encoding='utf-8') as f:
             f.write(table_id)
     
     def load_table_id(self, table_name: str):
@@ -412,7 +413,7 @@ class Nocodb:
 
     def load_table_id_from_file(self, table_name: str):
         try:
-            with open(root_path / 'setting/nocodb/table_id.txt', 'r', encoding='utf-8') as f:
+            with open(root_path / 'Administrator_Scripts/Nocodb/table_id.txt', 'r', encoding='utf-8') as f:
                 table_id = f.read().strip()
             
             if self.validate_table_id(table_id):
@@ -503,5 +504,3 @@ columns = [
         "dt": "varchar(255)"
     }
 ]
-
-client = Nocodb()

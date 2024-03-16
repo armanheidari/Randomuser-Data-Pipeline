@@ -56,16 +56,18 @@ shift
 
 table=0
 
-case $1 in
--t | --table)
-    table=1
-    shift
-    ;;
-*) 
-    echo "Unknown flag"
-    exit 1
-    ;;
-esac
+if [ -n "$1" ]; then
+    case $1 in
+    -t | --table)
+        table=1
+        shift
+        ;;
+    *) 
+        echo "Unknown flag"
+        exit 1
+        ;;
+    esac
+fi
 
 if [ $table -eq 0 ]; then
     _save_log "$log_text"

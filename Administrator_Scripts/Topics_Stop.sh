@@ -13,7 +13,7 @@ _parent_dir () {
 
 dir_path=$(_parent_dir $(readlink -f $0) 2)
 
-for file_name in Add_Label.py Add_Timestamp.py Add_Database.py; do
+for file_name in 2-Add_Label.py 1-Add_Timestamp.py 3-Add_Database.py; do
 	for pid in $(
 		ps -ax -o pid,command | 
 		grep "$dir_path/Python_Files/$file_name" | 
